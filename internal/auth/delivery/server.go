@@ -20,6 +20,7 @@ type Server struct {
 	Usecase
 }
 
+// Busyness logic for refreshing tokens e.g.
 type Usecase interface {
 	RefreshTokenPair(models.RefreshToken) (map[string]string, error)
 }

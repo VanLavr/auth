@@ -9,6 +9,7 @@ type authUsecase struct {
 	Repository
 }
 
+// Repository for working with MongoDB
 type Repository interface {
 	StoreToken(models.RefreshToken)
 	GetToken(string) *models.RefreshToken

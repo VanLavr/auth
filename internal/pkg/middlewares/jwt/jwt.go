@@ -15,6 +15,8 @@ func init() {
 	log.SetFlags(log.Lshortfile)
 }
 
+// Secret is a secret string for token encryption. acExp - access token exparation time,
+// refExp - refresh token exparation time.
 type JwtMiddleware struct {
 	secret string
 	acExp  time.Duration
@@ -36,6 +38,9 @@ func (j *JwtMiddleware) GenerateTokenPair(id string) map[string]string {
 	}
 }
 
+// Create claims.
+// Sign token.
+// Return it.
 func (j *JwtMiddleware) generateRefreshToken(id string) string {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
 		"guid": id,
@@ -63,6 +68,10 @@ func (j *JwtMiddleware) generateAccessToken(id string) string {
 	return stringToken
 }
 
+// Extract token string from request.
+// Parse it.
+// Check if it valid or not.
+// Call the handler if it's allright.
 func (j *JwtMiddleware) ValidateAccessToken(next func(w http.ResponseWriter, r *http.Request)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		tokenString, err := j.extractTokenString(r)
@@ -104,6 +113,9 @@ func (j *JwtMiddleware) extractTokenString(r *http.Request) (string, error) {
 	return tokenString, nil
 }
 
+// Parse token from provided string.
+// Check if it is valid.
+// Extract guid from claims.
 func (j *JwtMiddleware) ValidateRefreshToken(tokenString string) (string, bool) {
 	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
 		_, ok := t.Method.(*jwt.SigningMethodHMAC)
