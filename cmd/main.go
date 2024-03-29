@@ -7,16 +7,13 @@ import (
 	"os/signal"
 
 	"github.com/VanLavr/auth/internal/auth/delivery"
+	"github.com/VanLavr/auth/internal/auth/usecase"
 	"github.com/VanLavr/auth/internal/pkg/config"
 )
 
-type s struct{}
-
-func (this *s) RefreshToken(string) (map[string]string, error)
-func (this *s) CheckIfTokenIsUsed(string, string) bool
-
 func main() {
-	srv := delivery.New(&config.Config{Addr: ":3000", Secret: "afdjsalf"}, &s{})
+	usecase := usecase.New()
+	srv := delivery.New(&config.Config{Addr: ":3000", Secret: "afdjsalf"}, usecase)
 	srv.BindRoutes()
 
 	go func() {
