@@ -8,4 +8,5 @@ var (
 	ErrInternal             = errors.New("internal server error")
 	ErrInvalidToken         = errors.New("provided token is invalid")
 	ErrTokenExpired         = errors.New("token has expired")
+	ErrTokenAlreadyUsed     = errors.New("provided token have already been used")
 )

@@ -12,8 +12,8 @@ import (
 
 type s struct{}
 
-func (this *s) GetNewTokenPair() {}
-func (this *s) RefreshToken()    {}
+func (this *s) RefreshToken(string) (map[string]string, error)
+func (this *s) CheckIfTokenIsUsed(string, string) bool
 
 func main() {
 	srv := delivery.New(&config.Config{Addr: ":3000", Secret: "afdjsalf"}, &s{})

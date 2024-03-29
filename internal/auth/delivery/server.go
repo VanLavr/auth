@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/VanLavr/auth/internal/pkg/config"
+	e "github.com/VanLavr/auth/internal/pkg/errors"
 	"github.com/VanLavr/auth/internal/pkg/middlewares/jwt"
 )
 
@@ -19,8 +20,8 @@ type Server struct {
 }
 
 type Usecase interface {
-	GetNewTokenPair()
-	RefreshToken()
+	RefreshToken(string) (map[string]string, error)
+	CheckIfTokenIsUsed(string, string) bool
 }
 
 func New(cfg *config.Config, u Usecase) *Server {
@@ -49,7 +50,22 @@ func (s *Server) ShutDown(ctx context.Context) error {
 }
 
 func (s *Server) refreshToken(w http.ResponseWriter, r *http.Request) {
+	var token Refresh
+	s.decodeBody(r, &token)
+	guid, valid := s.jwt.ValidateRefreshToken(token.Token)
+	if !valid {
+		fmt.Fprint(w, s.encodeToJSON(Response{
+			Error:   e.ErrInvalidToken.Error(),
+			Content: nil,
+		}))
+	}
 
+	if !s.CheckIfTokenIsUsed(guid, token.Token) {
+		fmt.Fprint(w, s.encodeToJSON(Response{
+			Error:   e.ErrInvalidToken.Error(),
+			Content: nil,
+		}))
+	}
 }
 
 func (s *Server) getTokenPair(w http.ResponseWriter, r *http.Request) {
@@ -76,4 +92,8 @@ func (s *Server) encodeToJSON(resp Response) string {
 	return string(encoded)
 }
 
-func (s *Server) decodeBody()
+func (s *Server) decodeBody(r *http.Request, dest *Refresh) {
+	if err := json.NewDecoder(r.Body).Decode(dest); err != nil {
+		log.Println(err)
+	}
+}

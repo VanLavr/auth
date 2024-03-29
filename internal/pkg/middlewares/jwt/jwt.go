@@ -104,7 +104,7 @@ func (j *JwtMiddleware) extractTokenString(r *http.Request) (string, error) {
 	return tokenString, nil
 }
 
-func (j *JwtMiddleware) ValidateRefreshToken(tokenString string) bool {
+func (j *JwtMiddleware) ValidateRefreshToken(tokenString string) (string, bool) {
 	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
 		_, ok := t.Method.(*jwt.SigningMethodHMAC)
 		if !ok {
@@ -113,8 +113,16 @@ func (j *JwtMiddleware) ValidateRefreshToken(tokenString string) bool {
 		return []byte(j.secret), nil
 	})
 	if err != nil || !token.Valid {
-		return false
+		return "", false
 	}
 
-	return true
+	claims := token.Claims.(jwt.MapClaims)
+
+	id := claims["guid"]
+	guid, ok := id.(string)
+	if !ok {
+		return "", false
+	}
+
+	return guid, true
 }
