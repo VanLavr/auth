@@ -39,9 +39,8 @@ func (j *JwtMiddleware) ValidateToken(next func(w http.ResponseWriter, r *http.R
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		tokenString, err := j.extractTokenString(r)
 		if err != nil {
-			if _, er := fmt.Fprint(w, err.Error()); er != nil {
-				log.Println(er)
-			}
+			fmt.Fprint(w, err.Error())
+			log.Println(err)
 			return
 		}
 
@@ -53,42 +52,41 @@ func (j *JwtMiddleware) ValidateToken(next func(w http.ResponseWriter, r *http.R
 			return j.secret, nil
 		})
 		if err != nil {
-			if _, er := fmt.Fprint(w, e.ErrInternal.Error()); er != nil {
-				log.Println(er)
-			}
+			fmt.Fprint(w, e.ErrInternal.Error())
 			log.Println(err)
 			return
 		}
 
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
-			if _, err := fmt.Fprint(w, e.ErrTokenWasNotProvided.Error()); err != nil {
-				log.Println(err)
-			}
+			fmt.Fprint(w, e.ErrTokenWasNotProvided.Error())
+			log.Println(err)
 			return
 		}
 
-		exp := claims["exp"]
-		expTime, err := j.validateExpTime(exp)
-		if err != nil {
-			if _, err := fmt.Fprint(w, err.Error()); err != nil {
-				log.Println(err)
-			}
-			return
-		}
-
-		if expTime < time.Now().Unix() {
-			if _, err := fmt.Fprint(w, e.ErrTokenExpired.Error()); err != nil {
-				log.Println(err)
-			}
-			return
+		if !j.validateExpTime(claims["exp"]) {
+			fmt.Fprint(w, e.ErrInvalidToken)
 		}
 
 		next(w, r)
 	})
 }
 
-func (j *JwtMiddleware) validateExpTime(exp any) (int64, error) {
+func (j *JwtMiddleware) validateExpTime(exp any) bool {
+	expTime, err := j.extractExpTime(exp)
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+
+	if expTime < time.Now().Unix() {
+		return false
+	}
+
+	return true
+}
+
+func (j *JwtMiddleware) extractExpTime(exp any) (int64, error) {
 	t, ok := exp.(float64)
 	if !ok {
 		return 0, e.ErrInvalidToken
