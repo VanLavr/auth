@@ -37,19 +37,10 @@ func (j *JwtMiddleware) GenerateToken(id string) string {
 
 func (j *JwtMiddleware) ValidateToken(next func(w http.ResponseWriter, r *http.Request)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authHeaders := r.Header.Values("Authorization")
-		if len(authHeaders) == 0 {
-			if _, err := fmt.Fprint(w, e.ErrTokenWasNotProvided.Error()); err != nil {
-				log.Println(err)
-			}
-			return
-		}
-
-		jwtHeader := authHeaders[0]
-		tokenString := jwtHeader[len("Bearer "):]
-		if len(tokenString) == 0 {
-			if _, err := fmt.Fprint(w, e.ErrTokenWasNotProvided.Error()); err != nil {
-				log.Println(err)
+		tokenString, err := j.extractTokenString(r)
+		if err != nil {
+			if _, er := fmt.Fprint(w, err.Error()); er != nil {
+				log.Println(er)
 			}
 			return
 		}
@@ -109,4 +100,19 @@ func (j *JwtMiddleware) validateExpTime(exp any) (int64, error) {
 	}
 
 	return time, nil
+}
+
+func (j *JwtMiddleware) extractTokenString(r *http.Request) (string, error) {
+	authHeaders := r.Header.Values("Authorization")
+	if len(authHeaders) == 0 {
+		return "", e.ErrTokenWasNotProvided
+	}
+
+	jwtHeader := authHeaders[0]
+	tokenString := jwtHeader[len("Bearer "):]
+	if len(tokenString) == 0 {
+		return "", e.ErrTokenWasNotProvided
+	}
+
+	return tokenString, nil
 }
