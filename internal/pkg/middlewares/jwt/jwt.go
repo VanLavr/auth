@@ -15,7 +15,7 @@ type JwtMiddleware struct {
 	secret string
 }
 
-func New(cfg config.Config) *JwtMiddleware {
+func New(cfg *config.Config) *JwtMiddleware {
 	return &JwtMiddleware{
 		secret: cfg.Secret,
 	}
