@@ -11,6 +11,10 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+func init() {
+	log.SetFlags(log.Lshortfile)
+}
+
 type JwtMiddleware struct {
 	secret string
 }
@@ -27,7 +31,7 @@ func (j *JwtMiddleware) GenerateToken(id string) string {
 		"exp":  time.Now().Add(time.Minute).Unix(),
 	})
 
-	stringToken, err := token.SignedString(j.secret)
+	stringToken, err := token.SignedString([]byte(j.secret))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -49,55 +53,16 @@ func (j *JwtMiddleware) ValidateToken(next func(w http.ResponseWriter, r *http.R
 			if !ok {
 				return nil, e.ErrInvalidSigningMethod
 			}
-			return j.secret, nil
+			return []byte(j.secret), nil
 		})
-		if err != nil {
-			fmt.Fprint(w, e.ErrInternal.Error())
+		if err != nil || !token.Valid {
+			fmt.Fprint(w, e.ErrInvalidToken.Error())
 			log.Println(err)
 			return
-		}
-
-		claims, ok := token.Claims.(jwt.MapClaims)
-		if !ok {
-			fmt.Fprint(w, e.ErrTokenWasNotProvided.Error())
-			log.Println(err)
-			return
-		}
-
-		if !j.validateExpTime(claims["exp"]) {
-			fmt.Fprint(w, e.ErrInvalidToken)
 		}
 
 		next(w, r)
 	})
-}
-
-func (j *JwtMiddleware) validateExpTime(exp any) bool {
-	expTime, err := j.extractExpTime(exp)
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-
-	if expTime < time.Now().Unix() {
-		return false
-	}
-
-	return true
-}
-
-func (j *JwtMiddleware) extractExpTime(exp any) (int64, error) {
-	t, ok := exp.(float64)
-	if !ok {
-		return 0, e.ErrInvalidToken
-	}
-
-	time := int64(t)
-	if time == 0 {
-		return 0, e.ErrInvalidToken
-	}
-
-	return time, nil
 }
 
 func (j *JwtMiddleware) extractTokenString(r *http.Request) (string, error) {
