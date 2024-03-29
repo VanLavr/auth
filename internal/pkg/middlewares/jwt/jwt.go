@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/VanLavr/tz1/internal/pkg/config"
-	e "github.com/VanLavr/tz1/internal/pkg/errors"
+	"github.com/VanLavr/auth/internal/pkg/config"
+	e "github.com/VanLavr/auth/internal/pkg/errors"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -17,18 +17,42 @@ func init() {
 
 type JwtMiddleware struct {
 	secret string
+	acExp  time.Duration
+	refExp time.Duration
 }
 
 func New(cfg *config.Config) *JwtMiddleware {
 	return &JwtMiddleware{
 		secret: cfg.Secret,
+		acExp:  cfg.AccessExpTime,
+		refExp: cfg.RefreshExpTime,
 	}
 }
 
-func (j *JwtMiddleware) GenerateToken(id string) string {
+func (j *JwtMiddleware) GenerateTokenPair(id string) map[string]string {
+	return map[string]string{
+		"access":  j.generateAccessToken(id),
+		"refresh": j.generateRefreshToken(id),
+	}
+}
+
+func (j *JwtMiddleware) generateRefreshToken(id string) string {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
 		"guid": id,
-		"exp":  time.Now().Add(time.Minute).Unix(),
+		"exp":  time.Now().Add(time.Second * j.refExp).Unix(),
+	})
+
+	stringToken, err := token.SignedString([]byte(j.secret))
+	if err != nil {
+		log.Fatal(err)
+	}
+	return stringToken
+}
+
+func (j *JwtMiddleware) generateAccessToken(id string) string {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
+		"guid": id,
+		"exp":  time.Now().Add(time.Second * j.acExp).Unix(),
 	})
 
 	stringToken, err := token.SignedString([]byte(j.secret))

@@ -6,8 +6,8 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/VanLavr/tz1/internal/pkg/config"
-	"github.com/VanLavr/tz1/internal/user/delivery"
+	"github.com/VanLavr/auth/internal/auth/delivery"
+	"github.com/VanLavr/auth/internal/pkg/config"
 )
 
 type s struct{}
@@ -32,6 +32,6 @@ func main() {
 	<-context.Done()
 
 	if err := srv.ShutDown(context); err != nil {
-		log.Fatal(err, "here")
+		log.Fatal(err)
 	}
 }

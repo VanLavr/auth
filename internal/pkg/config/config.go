@@ -8,4 +8,6 @@ type Config struct {
 	WriteTimeout   time.Duration
 	MaxHeaderBytes int
 	Secret         string
+	AccessExpTime  time.Duration
+	RefreshExpTime time.Duration
 }

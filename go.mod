@@ -1,4 +1,4 @@
-module github.com/VanLavr/tz1
+module github.com/VanLavr/auth
 
 go 1.22.0
 

@@ -7,8 +7,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/VanLavr/tz1/internal/pkg/config"
-	"github.com/VanLavr/tz1/internal/pkg/middlewares/jwt"
+	"github.com/VanLavr/auth/internal/pkg/config"
+	"github.com/VanLavr/auth/internal/pkg/middlewares/jwt"
 )
 
 type Server struct {
@@ -49,10 +49,10 @@ func (s *Server) ShutDown(ctx context.Context) error {
 }
 
 func (s *Server) getTokenPair(w http.ResponseWriter, r *http.Request) {
-	token := s.jwt.GenerateToken(r.PathValue("id"))
+	tokens := s.jwt.GenerateTokenPair(r.PathValue("id"))
 	fmt.Fprint(w, s.encodeToJSON(Response{
 		Error:   "",
-		Content: token,
+		Content: tokens,
 	}))
 }
 
