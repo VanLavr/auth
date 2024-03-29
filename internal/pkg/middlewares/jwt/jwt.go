@@ -63,7 +63,7 @@ func (j *JwtMiddleware) generateAccessToken(id string) string {
 	return stringToken
 }
 
-func (j *JwtMiddleware) ValidateToken(next func(w http.ResponseWriter, r *http.Request)) http.Handler {
+func (j *JwtMiddleware) ValidateAccessToken(next func(w http.ResponseWriter, r *http.Request)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		tokenString, err := j.extractTokenString(r)
 		if err != nil {
@@ -102,4 +102,19 @@ func (j *JwtMiddleware) extractTokenString(r *http.Request) (string, error) {
 	}
 
 	return tokenString, nil
+}
+
+func (j *JwtMiddleware) ValidateRefreshToken(tokenString string) bool {
+	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
+		_, ok := t.Method.(*jwt.SigningMethodHMAC)
+		if !ok {
+			return nil, e.ErrInvalidSigningMethod
+		}
+		return []byte(j.secret), nil
+	})
+	if err != nil || !token.Valid {
+		return false
+	}
+
+	return true
 }

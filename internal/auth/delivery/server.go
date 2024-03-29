@@ -48,6 +48,10 @@ func (s *Server) ShutDown(ctx context.Context) error {
 	return s.httpSrv.Shutdown(ctx)
 }
 
+func (s *Server) refreshToken(w http.ResponseWriter, r *http.Request) {
+
+}
+
 func (s *Server) getTokenPair(w http.ResponseWriter, r *http.Request) {
 	tokens := s.jwt.GenerateTokenPair(r.PathValue("id"))
 	fmt.Fprint(w, s.encodeToJSON(Response{
@@ -71,3 +75,5 @@ func (s *Server) encodeToJSON(resp Response) string {
 
 	return string(encoded)
 }
+
+func (s *Server) decodeBody()
