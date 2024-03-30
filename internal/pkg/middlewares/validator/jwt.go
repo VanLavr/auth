@@ -31,49 +31,13 @@ func New(cfg *config.Config) *JwtMiddleware {
 	}
 }
 
-func (j *JwtMiddleware) GenerateTokenPair(id string) map[string]string {
-	return map[string]string{
-		"access_token":  j.generateAccessToken(id),
-		"refresh_token": j.generateRefreshToken(id),
-	}
-}
-
-// Create claims.
-// Sign token.
-// Return it.
-func (j *JwtMiddleware) generateRefreshToken(id string) string {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
-		"guid": id,
-		"exp":  time.Now().Add(time.Second * j.refExp).Unix(),
-	})
-
-	stringToken, err := token.SignedString([]byte(j.secret))
-	if err != nil {
-		log.Fatal(err)
-	}
-	return stringToken
-}
-
-func (j *JwtMiddleware) generateAccessToken(id string) string {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
-		"guid": id,
-		"exp":  time.Now().Add(time.Second * j.acExp).Unix(),
-	})
-
-	stringToken, err := token.SignedString([]byte(j.secret))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return stringToken
-}
-
 // Extract token string from request.
 // Parse it.
 // Check if it valid or not.
 // Call the handler if it's allright.
 func (j *JwtMiddleware) ValidateAccessToken(next func(w http.ResponseWriter, r *http.Request)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Extract token string from request.
 		tokenString, err := j.extractTokenString(r)
 		if err != nil {
 			fmt.Fprint(w, err.Error())
@@ -81,6 +45,7 @@ func (j *JwtMiddleware) ValidateAccessToken(next func(w http.ResponseWriter, r *
 			return
 		}
 
+		// Parse it.
 		token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
 			_, ok := t.Method.(*jwt.SigningMethodHMAC)
 			if !ok {
@@ -88,12 +53,15 @@ func (j *JwtMiddleware) ValidateAccessToken(next func(w http.ResponseWriter, r *
 			}
 			return []byte(j.secret), nil
 		})
+
+		// Check if it valid or not.
 		if err != nil || !token.Valid {
 			fmt.Fprint(w, e.ErrInvalidToken.Error())
 			log.Println(err)
 			return
 		}
 
+		// Call the handler if it's allright.
 		next(w, r)
 	})
 }
@@ -111,30 +79,4 @@ func (j *JwtMiddleware) extractTokenString(r *http.Request) (string, error) {
 	}
 
 	return tokenString, nil
-}
-
-// Parse token from provided string.
-// Check if it is valid.
-// Extract guid from claims.
-func (j *JwtMiddleware) ValidateRefreshToken(tokenString string) (string, bool) {
-	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
-		_, ok := t.Method.(*jwt.SigningMethodHMAC)
-		if !ok {
-			return nil, e.ErrInvalidSigningMethod
-		}
-		return []byte(j.secret), nil
-	})
-	if err != nil || !token.Valid {
-		return "", false
-	}
-
-	claims := token.Claims.(jwt.MapClaims)
-
-	id := claims["guid"]
-	guid, ok := id.(string)
-	if !ok {
-		return "", false
-	}
-
-	return guid, true
 }

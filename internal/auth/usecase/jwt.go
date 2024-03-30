@@ -16,7 +16,7 @@ type tokenManager struct {
 	refExp time.Duration
 }
 
-func newTokenGenerator(cfg *config.Config) *tokenManager {
+func newTokenManager(cfg *config.Config) *tokenManager {
 	return &tokenManager{
 		secret: cfg.Secret,
 		acExp:  cfg.AccessExpTime,
@@ -35,15 +35,19 @@ func (j *tokenManager) GenerateTokenPair(id string) map[string]string {
 // Sign token.
 // Return it.
 func (j *tokenManager) generateRefreshToken(id string) string {
+	// Create claims.
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
 		"guid": id,
 		"exp":  time.Now().Add(time.Second * j.refExp).Unix(),
 	})
 
+	// Sign token.
 	stringToken, err := token.SignedString([]byte(j.secret))
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// Return it.
 	return stringToken
 }
 
@@ -65,6 +69,7 @@ func (j *tokenManager) generateAccessToken(id string) string {
 // Check if it is valid.
 // Extract guid from claims.
 func (j *tokenManager) ValidateRefreshToken(tokenString string) (string, bool) {
+	// Parse token from provided string.
 	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
 		_, ok := t.Method.(*jwt.SigningMethodHMAC)
 		if !ok {
@@ -72,10 +77,13 @@ func (j *tokenManager) ValidateRefreshToken(tokenString string) (string, bool) {
 		}
 		return []byte(j.secret), nil
 	})
+
+	// Check if it is valid.
 	if err != nil || !token.Valid {
 		return "", false
 	}
 
+	// Extract guid from claims.
 	claims := token.Claims.(jwt.MapClaims)
 
 	id := claims["guid"]

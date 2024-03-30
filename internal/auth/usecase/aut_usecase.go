@@ -30,7 +30,7 @@ type Repository interface {
 }
 
 func New(r Repository, cfg *config.Config) delivery.Usecase {
-	tokenManager := newTokenGenerator(cfg)
+	tokenManager := newTokenManager(cfg)
 	return &authUsecase{repository: r, tokenManager: tokenManager}
 }
 
