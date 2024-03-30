@@ -9,7 +9,7 @@ import (
 
 	"github.com/VanLavr/auth/internal/auth/delivery"
 	"github.com/VanLavr/auth/internal/auth/repository"
-	"github.com/VanLavr/auth/internal/auth/usecase"
+	usecase "github.com/VanLavr/auth/internal/auth/service"
 	"github.com/VanLavr/auth/internal/pkg/config"
 	"github.com/VanLavr/auth/internal/pkg/logging"
 )

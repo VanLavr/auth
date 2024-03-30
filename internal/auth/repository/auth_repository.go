@@ -4,7 +4,7 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/VanLavr/auth/internal/auth/usecase"
+	usecase "github.com/VanLavr/auth/internal/auth/service"
 	"github.com/VanLavr/auth/internal/models"
 	"github.com/VanLavr/auth/internal/pkg/config"
 	e "github.com/VanLavr/auth/internal/pkg/errors"
