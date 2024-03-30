@@ -15,7 +15,6 @@ import (
 
 	"github.com/VanLavr/auth/internal/models"
 	"github.com/VanLavr/auth/internal/pkg/config"
-	e "github.com/VanLavr/auth/internal/pkg/errors"
 	jwt "github.com/VanLavr/auth/internal/pkg/middlewares/validator"
 )
 
@@ -106,7 +105,7 @@ func (s *Server) getTokenPair(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Error(err.Error())
 		fmt.Fprint(w, s.encodeToJSON(Response{
-			Error:   e.ErrInternal.Error(),
+			Error:   err.Error(),
 			Content: nil,
 		}))
 		return

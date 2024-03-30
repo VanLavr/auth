@@ -39,6 +39,7 @@ func (a *authRepository) Connect(ctx context.Context, cfg *config.Config) error 
 		slog.Error(err.Error())
 		return err
 	}
+	slog.Info("pinged")
 
 	// Select database and collection.
 	a.client = client

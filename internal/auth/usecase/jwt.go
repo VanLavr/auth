@@ -43,7 +43,7 @@ func (j *tokenManager) generateRefreshToken(id string, timestamp int64) string {
 	// Create claims.
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
 		"guid":     id,
-		"exp":      time.Now().Add(time.Second * j.refExp).Unix(),
+		"exp":      time.Now().Add(j.refExp).Unix(),
 		"coherent": fmt.Sprintf("%d%s", timestamp, id),
 	})
 
@@ -60,7 +60,7 @@ func (j *tokenManager) generateRefreshToken(id string, timestamp int64) string {
 func (j *tokenManager) generateAccessToken(id string, timestamp int64) string {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
 		"guid":     id,
-		"exp":      time.Now().Add(time.Second * j.acExp).Unix(),
+		"exp":      time.Now().Add(j.acExp).Unix(),
 		"coherent": fmt.Sprintf("%d%s", timestamp, id),
 	})
 

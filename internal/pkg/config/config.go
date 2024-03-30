@@ -62,11 +62,11 @@ func New() *Config {
 		Secret:         os.Getenv("SECRET"),
 		DBName:         os.Getenv("DBNAME"),
 		CollectionName: os.Getenv("COLLNAME"),
-		ReadTimeout:    time.Duration(readtimeout),
-		WriteTimeout:   time.Duration(writetimeout),
+		ReadTimeout:    time.Second * time.Duration(readtimeout),
+		WriteTimeout:   time.Second * time.Duration(writetimeout),
 		MaxHeaderBytes: maxheaderbytes,
-		AccessExpTime:  time.Duration(access),
-		RefreshExpTime: time.Duration(refresh),
+		AccessExpTime:  time.Second * time.Duration(access),
+		RefreshExpTime: time.Second * time.Duration(refresh),
 		Mongo:          os.Getenv("MONGO"),
 	}
 }
