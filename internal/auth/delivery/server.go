@@ -28,7 +28,7 @@ type Server struct {
 
 // Busyness logic for refreshing tokens e.g.
 type Usecase interface {
-	RefreshTokenPair(context.Context, models.RefreshToken) (map[string]any, error)
+	RefreshTokenPair(context.Context, models.RefreshToken, string) (map[string]any, error)
 	GetNewTokenPair(context.Context, string) (map[string]any, error)
 }
 
@@ -58,14 +58,25 @@ func (s *Server) ShutDown(ctx context.Context) error {
 }
 
 // Decode refresh token from body.
+// Extract access token from header.
 // Call usecase to refresh token pair.
 func (s *Server) refreshToken(w http.ResponseWriter, r *http.Request) {
 	// Decode refresh token from body.
 	var token models.RefreshToken
 	s.decodeBody(r, &token)
 
+	// Extract access token from header.
+	access, err := s.jwt.ExtractTokenString(r)
+	if err != nil {
+		fmt.Fprint(w, s.encodeToJSON(Response{
+			Error:   err.Error(),
+			Content: nil,
+		}))
+		return
+	}
+
 	// Call usecase to refresh token pair.
-	data, err := s.u.RefreshTokenPair(r.Context(), token)
+	data, err := s.u.RefreshTokenPair(r.Context(), token, access)
 	if err != nil {
 		fmt.Fprint(w, s.encodeToJSON(Response{
 			Error:   err.Error(),

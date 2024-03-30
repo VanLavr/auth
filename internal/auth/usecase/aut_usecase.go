@@ -37,10 +37,11 @@ func New(r Repository, cfg *config.Config) delivery.Usecase {
 // Check if provided token exists.
 // Validate refresh token jwt.
 // Check if this token owned by provided user.
+// Validate access and refresh token coherence.
 // Generate new token pair.
 // Update token in mongo -> it will replace used tokenstring with new tokenstring.
 // Return the pair.
-func (a *authUsecase) RefreshTokenPair(ctx context.Context, provided models.RefreshToken) (map[string]any, error) {
+func (a *authUsecase) RefreshTokenPair(ctx context.Context, provided models.RefreshToken, access string) (map[string]any, error) {
 	token, err := a.repository.GetToken(ctx, provided)
 	if err != nil {
 		return nil, err
@@ -59,6 +60,11 @@ func (a *authUsecase) RefreshTokenPair(ctx context.Context, provided models.Refr
 
 	// Check if this token owned by provided user.
 	if token.GUID != guid {
+		return nil, e.ErrInvalidToken
+	}
+
+	// Validate access and refresh token coherence.
+	if !a.tokenManager.ValidateTokensCoherence(access, provided.TokenString) {
 		return nil, e.ErrInvalidToken
 	}
 

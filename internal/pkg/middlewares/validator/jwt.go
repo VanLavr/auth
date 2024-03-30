@@ -38,7 +38,7 @@ func New(cfg *config.Config) *JwtMiddleware {
 func (j *JwtMiddleware) ValidateAccessToken(next func(w http.ResponseWriter, r *http.Request)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Extract token string from request.
-		tokenString, err := j.extractTokenString(r)
+		tokenString, err := j.ExtractTokenString(r)
 		if err != nil {
 			fmt.Fprint(w, err.Error())
 			log.Println(err)
@@ -66,7 +66,7 @@ func (j *JwtMiddleware) ValidateAccessToken(next func(w http.ResponseWriter, r *
 	})
 }
 
-func (j *JwtMiddleware) extractTokenString(r *http.Request) (string, error) {
+func (j *JwtMiddleware) ExtractTokenString(r *http.Request) (string, error) {
 	authHeaders := r.Header.Values("Authorization")
 	if len(authHeaders) == 0 {
 		return "", e.ErrTokenWasNotProvided
