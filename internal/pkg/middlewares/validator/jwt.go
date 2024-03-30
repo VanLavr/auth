@@ -33,8 +33,8 @@ func New(cfg *config.Config) *JwtMiddleware {
 
 func (j *JwtMiddleware) GenerateTokenPair(id string) map[string]string {
 	return map[string]string{
-		"access":  j.generateAccessToken(id),
-		"refresh": j.generateRefreshToken(id),
+		"access_token":  j.generateAccessToken(id),
+		"refresh_token": j.generateRefreshToken(id),
 	}
 }
 

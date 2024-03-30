@@ -26,8 +26,8 @@ func newTokenGenerator(cfg *config.Config) *tokenManager {
 
 func (j *tokenManager) GenerateTokenPair(id string) map[string]string {
 	return map[string]string{
-		"access":  j.generateAccessToken(id),
-		"refresh": j.generateRefreshToken(id),
+		"access_token":  j.generateAccessToken(id),
+		"refresh_token": j.generateRefreshToken(id),
 	}
 }
 

@@ -9,4 +9,6 @@ var (
 	ErrInvalidToken         = errors.New("provided token is invalid")
 	ErrTokenExpired         = errors.New("token has expired")
 	ErrTokenAlreadyUsed     = errors.New("provided token have already been used")
+	ErrInvalidGUID          = errors.New("provided GUID is invalid")
+	ErrTokenNotFound        = errors.New("provided token does not exists")
 )

@@ -26,7 +26,7 @@ type Repository interface {
 	// GetToken() requires provided token for getting the token from mongo and check if it was used.
 	GetToken(context.Context, models.RefreshToken) (*models.RefreshToken, error)
 	// UpdateToken() is used to mark tokens as used
-	MarkToken(models.RefreshToken) error
+	UpdateToken(models.RefreshToken) error
 }
 
 func New(r Repository, cfg *config.Config) delivery.Usecase {
@@ -35,11 +35,9 @@ func New(r Repository, cfg *config.Config) delivery.Usecase {
 }
 
 // Check if provided token exists.
-// Check if token is already have been used.
 // Check if this token owned by provided user.
-// Mark provided token as used.
 // Generate new token pair.
-// Save new refresh token and mark it as unused.
+// Update token in mongo -> it will replace used tokenstring with new tokenstring.
 // Return the pair.
 func (a *authUsecase) RefreshTokenPair(ctx context.Context, provided models.RefreshToken) (map[string]any, error) {
 	token, err := a.repository.GetToken(ctx, provided)
@@ -57,20 +55,40 @@ func (a *authUsecase) RefreshTokenPair(ctx context.Context, provided models.Refr
 		return nil, e.ErrInvalidToken
 	}
 
-	a.repository.MarkToken(provided)
+	// Generate new token pair.
+	tokens := a.tokenManager.GenerateTokenPair(provided.GUID)
+	refresh := models.RefreshToken{
+		GUID:        provided.GUID,
+		TokenString: tokens["refresh_token"],
+	}
 
-	panic("not implemented")
+	// Update token in mongo -> it will replace used tokenstring with new tokenstring.
+	if err := a.repository.UpdateToken(refresh); err != nil {
+		return nil, err
+	}
+
+	// Return the pair.
+	return map[string]any{
+		"access_token":  tokens["access_token"],
+		"refresh_token": refresh,
+	}, nil
 }
 
+// Validate GUID.
 // Generate new token pair.
 // Save refresh token in mongo.
 // Return token pair.
 func (a *authUsecase) GetNewTokenPair(ctx context.Context, id string) (map[string]any, error) {
+	// Validate GUID.
+	if !a.validateID(id) {
+		return nil, e.ErrInvalidGUID
+	}
+
 	// Generate new token pair.
 	tokens := a.tokenManager.GenerateTokenPair(id)
 	refresh := models.RefreshToken{
 		GUID:        id,
-		TokenString: tokens["refresh"],
+		TokenString: tokens["refresh_token"],
 	}
 
 	// Save refresh token in mongo.
@@ -80,11 +98,11 @@ func (a *authUsecase) GetNewTokenPair(ctx context.Context, id string) (map[strin
 
 	// Return token pair.
 	return map[string]any{
-		"access":  tokens["access"],
-		"refresh": refresh,
+		"access_token":  tokens["access_token"],
+		"refresh_token": refresh,
 	}, nil
 }
 
-func (a *authUsecase) checkIfTokenIsUsed(providedToken models.RefreshToken) bool {
+func (a *authUsecase) validateID(id string) bool {
 	panic("not implemented")
 }

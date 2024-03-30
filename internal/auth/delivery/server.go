@@ -2,7 +2,7 @@
 
 // 1) get token pair -> gen pair (usecase) -> save refresh token (repository) -> return pair.
 
-// 2) refresh token pair -> check if provided refresh token is valid (delivery - middleware) ->
+// 2) refresh token pair -> check if provided refresh token is valid (usecase) ->
 // check if token is used (usecase) -> generate new pair (usecase) -> update refresh token (repository) -> return pair.
 package delivery
 
@@ -57,26 +57,14 @@ func (s *Server) ShutDown(ctx context.Context) error {
 	return s.httpSrv.Shutdown(ctx)
 }
 
+// Decode refresh token from body.
+// Call usecase to refresh token pair.
 func (s *Server) refreshToken(w http.ResponseWriter, r *http.Request) {
+	// Decode refresh token from body.
 	var token models.RefreshToken
 	s.decodeBody(r, &token)
-	guid, valid := s.jwt.ValidateRefreshToken(token.TokenString)
-	if !valid {
-		fmt.Fprint(w, s.encodeToJSON(Response{
-			Error:   e.ErrInvalidToken.Error(),
-			Content: nil,
-		}))
-		return
-	}
 
-	if guid != token.GUID {
-		fmt.Fprint(w, s.encodeToJSON(Response{
-			Error:   e.ErrInvalidToken.Error(),
-			Content: nil,
-		}))
-		return
-	}
-
+	// Call usecase to refresh token pair.
 	data, err := s.u.RefreshTokenPair(r.Context(), token)
 	if err != nil {
 		fmt.Fprint(w, s.encodeToJSON(Response{
@@ -92,7 +80,11 @@ func (s *Server) refreshToken(w http.ResponseWriter, r *http.Request) {
 	}))
 }
 
+// Get guid from path value.
+// Call usecase to generate pair.
 func (s *Server) getTokenPair(w http.ResponseWriter, r *http.Request) {
+	// Get guid from path value.
+	// Call usecase to generate pair.
 	tokens, err := s.u.GetNewTokenPair(r.Context(), r.PathValue("id"))
 	if err != nil {
 		fmt.Fprint(w, s.encodeToJSON(Response{
