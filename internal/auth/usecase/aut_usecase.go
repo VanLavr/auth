@@ -57,7 +57,7 @@ func (a *authUsecase) RefreshTokenPair(ctx context.Context, provided models.Refr
 		return nil, e.ErrInvalidToken
 	}
 
-	// Validate refresh token jwt.
+	// Validate refresh token jwt. (expired or not)
 	guid, valid := a.tokenManager.ValidateRefreshToken(provided.TokenString)
 	if !valid {
 		slog.Error(e.ErrInvalidToken.Error())
@@ -65,7 +65,11 @@ func (a *authUsecase) RefreshTokenPair(ctx context.Context, provided models.Refr
 	}
 
 	// Check if this token owned by provided user.
-	if token.GUID != guid {
+	// tokenString comparison here stands for comparing provided tokenstring and tokenstring from database
+	// to inspect if provided token was updated or not. This comparison allow us to check if we can use provided token for refreshing
+	// or not even if token was not expired, but was updated (used). So if it not expired, but updated
+	// it is an already used tokne, so we can not use it anymore.
+	if token.GUID != guid || token.TokenString != provided.TokenString {
 		slog.Error(e.ErrInvalidToken.Error())
 		return nil, e.ErrInvalidToken
 	}
