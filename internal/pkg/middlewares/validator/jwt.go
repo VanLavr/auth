@@ -2,7 +2,6 @@ package jwt
 
 import (
 	"fmt"
-	"log"
 	"log/slog"
 	"net/http"
 	"time"
@@ -11,10 +10,6 @@ import (
 	e "github.com/VanLavr/auth/internal/pkg/errors"
 	"github.com/golang-jwt/jwt/v5"
 )
-
-func init() {
-	log.SetFlags(log.Lshortfile)
-}
 
 // Secret is a secret string for token encryption. acExp - access token exparation time,
 // refExp - refresh token exparation time.

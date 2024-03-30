@@ -51,7 +51,7 @@ func New() *Config {
 		log.Fatal(err)
 	}
 
-	reftime := os.Getenv("ACCESSTIME")
+	reftime := os.Getenv("REFTIME")
 	refresh, err := strconv.Atoi(reftime)
 	if err != nil {
 		log.Fatal(err)
