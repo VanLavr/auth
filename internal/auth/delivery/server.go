@@ -10,7 +10,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/VanLavr/auth/internal/models"
@@ -32,7 +32,7 @@ type Usecase interface {
 	GetNewTokenPair(context.Context, string) (map[string]any, error)
 }
 
-func New(cfg *config.Config, u Usecase) *Server {
+func New(u Usecase, cfg *config.Config) *Server {
 	srv := &Server{
 		httpSrv: &http.Server{
 			Addr:           cfg.Addr,
@@ -61,6 +61,8 @@ func (s *Server) ShutDown(ctx context.Context) error {
 // Extract access token from header.
 // Call usecase to refresh token pair.
 func (s *Server) refreshToken(w http.ResponseWriter, r *http.Request) {
+	slog.Info("refresh token called")
+
 	// Decode refresh token from body.
 	var token models.RefreshToken
 	s.decodeBody(r, &token)
@@ -68,6 +70,7 @@ func (s *Server) refreshToken(w http.ResponseWriter, r *http.Request) {
 	// Extract access token from header.
 	access, err := s.jwt.ExtractTokenString(r)
 	if err != nil {
+		slog.Error(err.Error())
 		fmt.Fprint(w, s.encodeToJSON(Response{
 			Error:   err.Error(),
 			Content: nil,
@@ -78,6 +81,7 @@ func (s *Server) refreshToken(w http.ResponseWriter, r *http.Request) {
 	// Call usecase to refresh token pair.
 	data, err := s.u.RefreshTokenPair(r.Context(), token, access)
 	if err != nil {
+		slog.Error(err.Error())
 		fmt.Fprint(w, s.encodeToJSON(Response{
 			Error:   err.Error(),
 			Content: nil,
@@ -94,10 +98,13 @@ func (s *Server) refreshToken(w http.ResponseWriter, r *http.Request) {
 // Get guid from path value.
 // Call usecase to generate pair.
 func (s *Server) getTokenPair(w http.ResponseWriter, r *http.Request) {
+	slog.Info("get token pair is called")
+
 	// Get guid from path value.
 	// Call usecase to generate pair.
 	tokens, err := s.u.GetNewTokenPair(r.Context(), r.PathValue("id"))
 	if err != nil {
+		slog.Error(err.Error())
 		fmt.Fprint(w, s.encodeToJSON(Response{
 			Error:   e.ErrInternal.Error(),
 			Content: nil,
@@ -111,6 +118,7 @@ func (s *Server) getTokenPair(w http.ResponseWriter, r *http.Request) {
 	}))
 }
 
+// Access token testing endpoint.
 func (s *Server) restricted(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, s.encodeToJSON(Response{
 		Error:   "",
@@ -121,7 +129,7 @@ func (s *Server) restricted(w http.ResponseWriter, r *http.Request) {
 func (s *Server) encodeToJSON(resp Response) string {
 	encoded, err := json.Marshal(resp)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error(err.Error())
 	}
 
 	return string(encoded)
@@ -129,6 +137,6 @@ func (s *Server) encodeToJSON(resp Response) string {
 
 func (s *Server) decodeBody(r *http.Request, dest *models.RefreshToken) {
 	if err := json.NewDecoder(r.Body).Decode(dest); err != nil {
-		log.Println(err)
+		slog.Error(err.Error())
 	}
 }

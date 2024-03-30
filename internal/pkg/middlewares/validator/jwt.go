@@ -3,6 +3,7 @@ package jwt
 import (
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -41,7 +42,7 @@ func (j *JwtMiddleware) ValidateAccessToken(next func(w http.ResponseWriter, r *
 		tokenString, err := j.ExtractTokenString(r)
 		if err != nil {
 			fmt.Fprint(w, err.Error())
-			log.Println(err)
+			slog.Error(err.Error())
 			return
 		}
 
@@ -57,7 +58,7 @@ func (j *JwtMiddleware) ValidateAccessToken(next func(w http.ResponseWriter, r *
 		// Check if it valid or not.
 		if err != nil || !token.Valid {
 			fmt.Fprint(w, e.ErrInvalidToken.Error())
-			log.Println(err)
+			slog.Error(err.Error())
 			return
 		}
 

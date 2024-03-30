@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	"log"
+	"log/slog"
 
 	"github.com/VanLavr/auth/internal/auth/usecase"
 	"github.com/VanLavr/auth/internal/models"
@@ -20,21 +20,27 @@ type authRepository struct {
 	collection *mongo.Collection
 }
 
-func New(conn string) usecase.Repository {
-	return &authRepository{conn: conn}
+func New(cfg *config.Config) usecase.Repository {
+	return &authRepository{conn: cfg.Mongo}
 }
 
+// Connet() connects to mongo and selects the database and the collection.
 func (a *authRepository) Connect(ctx context.Context, cfg *config.Config) error {
+	// Create client options.
 	clientOptions := options.Client().ApplyURI(a.conn)
+	// Connect.
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
+		slog.Error(err.Error())
 		return err
 	}
 
 	if err = client.Ping(ctx, nil); err != nil {
+		slog.Error(err.Error())
 		return err
 	}
 
+	// Select database and collection.
 	a.client = client
 	a.database = client.Database(cfg.DBName)
 	a.collection = a.database.Collection(cfg.CollectionName)
@@ -44,6 +50,7 @@ func (a *authRepository) Connect(ctx context.Context, cfg *config.Config) error 
 
 func (a *authRepository) CloseConnetion(ctx context.Context) error {
 	if err := a.client.Disconnect(ctx); err != nil {
+		slog.Error(err.Error())
 		return err
 	}
 	return nil
@@ -62,6 +69,7 @@ func (a *authRepository) GetToken(ctx context.Context, provided models.RefreshTo
 	// Find a token via tokenstring and guid.
 	cursor, err := a.collection.Find(ctx, filter)
 	if err != nil {
+		slog.Error(err.Error())
 		return nil, err
 	}
 
@@ -69,6 +77,7 @@ func (a *authRepository) GetToken(ctx context.Context, provided models.RefreshTo
 	var result models.RefreshToken
 	for cursor.Next(ctx) {
 		if err := cursor.Decode(&result); err != nil {
+			slog.Error(err.Error())
 			return nil, err
 		}
 	}
@@ -84,7 +93,7 @@ func (a *authRepository) GetToken(ctx context.Context, provided models.RefreshTo
 func (a *authRepository) StoreToken(ctx context.Context, token models.RefreshToken) error {
 	_, err := a.collection.InsertOne(ctx, token)
 	if err != nil {
-		log.Println(err)
+		slog.Error(err.Error())
 		return err
 	}
 
@@ -109,11 +118,12 @@ func (a *authRepository) UpdateToken(ctx context.Context, provided models.Refres
 	// Update a document that matches the filter.
 	result, err := a.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
+		slog.Error(err.Error())
 		return err
 	}
 
 	if result.MatchedCount != 1 {
-		log.Println("no matches")
+		slog.Error("no matches")
 		return e.ErrInternal
 	}
 

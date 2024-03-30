@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/VanLavr/auth/internal/pkg/config"
@@ -50,7 +50,7 @@ func (j *tokenManager) generateRefreshToken(id string, timestamp int64) string {
 	// Sign token.
 	stringToken, err := token.SignedString([]byte(j.secret))
 	if err != nil {
-		log.Fatal(err)
+		slog.Error(err.Error())
 	}
 
 	// Return it.
@@ -66,7 +66,7 @@ func (j *tokenManager) generateAccessToken(id string, timestamp int64) string {
 
 	stringToken, err := token.SignedString([]byte(j.secret))
 	if err != nil {
-		log.Fatal(err)
+		slog.Error(err.Error())
 	}
 
 	return stringToken
@@ -87,6 +87,7 @@ func (j *tokenManager) ValidateRefreshToken(tokenString string) (string, bool) {
 
 	// Check if it is valid.
 	if err != nil || !token.Valid {
+		slog.Error(err.Error())
 		return "", false
 	}
 
@@ -116,7 +117,7 @@ func (j *tokenManager) ValidateTokensCoherence(access, refresh string) bool {
 	})
 
 	if err != nil {
-		log.Println(err)
+		slog.Error(err.Error())
 	}
 
 	refreshToken, err := jwt.Parse(refresh, func(t *jwt.Token) (interface{}, error) {
@@ -128,7 +129,7 @@ func (j *tokenManager) ValidateTokensCoherence(access, refresh string) bool {
 	})
 
 	if err != nil {
-		log.Println(err)
+		slog.Error(err.Error())
 	}
 
 	// Extract timestamp from claims.

@@ -19,6 +19,7 @@ type Config struct {
 	RefreshExpTime time.Duration
 	DBName         string
 	CollectionName string
+	Mongo          string
 }
 
 func New() *Config {
@@ -66,5 +67,6 @@ func New() *Config {
 		MaxHeaderBytes: maxheaderbytes,
 		AccessExpTime:  time.Duration(access),
 		RefreshExpTime: time.Duration(refresh),
+		Mongo:          os.Getenv("MONGO"),
 	}
 }

@@ -4,11 +4,14 @@ package usecase
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/VanLavr/auth/internal/auth/delivery"
 	"github.com/VanLavr/auth/internal/models"
 	"github.com/VanLavr/auth/internal/pkg/config"
 	e "github.com/VanLavr/auth/internal/pkg/errors"
+
+	"github.com/beevik/guid"
 )
 
 type authUsecase struct {
@@ -44,27 +47,32 @@ func New(r Repository, cfg *config.Config) delivery.Usecase {
 func (a *authUsecase) RefreshTokenPair(ctx context.Context, provided models.RefreshToken, access string) (map[string]any, error) {
 	token, err := a.repository.GetToken(ctx, provided)
 	if err != nil {
+		slog.Error(err.Error())
 		return nil, err
 	}
 
 	// Check if provided token exists.
 	if token == nil {
+		slog.Error(e.ErrInvalidToken.Error())
 		return nil, e.ErrInvalidToken
 	}
 
 	// Validate refresh token jwt.
 	guid, valid := a.tokenManager.ValidateRefreshToken(provided.TokenString)
 	if !valid {
+		slog.Error(e.ErrInvalidToken.Error())
 		return nil, e.ErrInvalidToken
 	}
 
 	// Check if this token owned by provided user.
 	if token.GUID != guid {
+		slog.Error(e.ErrInvalidToken.Error())
 		return nil, e.ErrInvalidToken
 	}
 
 	// Validate access and refresh token coherence.
 	if !a.tokenManager.ValidateTokensCoherence(access, provided.TokenString) {
+		slog.Error(e.ErrInvalidToken.Error())
 		return nil, e.ErrInvalidToken
 	}
 
@@ -77,6 +85,7 @@ func (a *authUsecase) RefreshTokenPair(ctx context.Context, provided models.Refr
 
 	// Update token in mongo -> it will replace used tokenstring with new tokenstring.
 	if err := a.repository.UpdateToken(ctx, refresh); err != nil {
+		slog.Error(err.Error())
 		return nil, err
 	}
 
@@ -94,6 +103,7 @@ func (a *authUsecase) RefreshTokenPair(ctx context.Context, provided models.Refr
 func (a *authUsecase) GetNewTokenPair(ctx context.Context, id string) (map[string]any, error) {
 	// Validate GUID.
 	if !a.validateID(id) {
+		slog.Error(e.ErrInvalidGUID.Error())
 		return nil, e.ErrInvalidGUID
 	}
 
@@ -106,6 +116,7 @@ func (a *authUsecase) GetNewTokenPair(ctx context.Context, id string) (map[strin
 
 	// Save refresh token in mongo.
 	if err := a.repository.StoreToken(ctx, refresh); err != nil {
+		slog.Error(err.Error())
 		return nil, err
 	}
 
@@ -117,5 +128,5 @@ func (a *authUsecase) GetNewTokenPair(ctx context.Context, id string) (map[strin
 }
 
 func (a *authUsecase) validateID(id string) bool {
-	panic("not implemented")
+	return guid.IsGuid(id)
 }
