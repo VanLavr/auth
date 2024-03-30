@@ -35,6 +35,7 @@ func New(r Repository, cfg *config.Config) delivery.Usecase {
 }
 
 // Check if provided token exists.
+// Validate refresh token jwt.
 // Check if this token owned by provided user.
 // Generate new token pair.
 // Update token in mongo -> it will replace used tokenstring with new tokenstring.
@@ -50,8 +51,14 @@ func (a *authUsecase) RefreshTokenPair(ctx context.Context, provided models.Refr
 		return nil, e.ErrInvalidToken
 	}
 
+	// Validate refresh token jwt.
+	guid, valid := a.tokenManager.ValidateRefreshToken(provided.TokenString)
+	if !valid {
+		return nil, e.ErrInvalidToken
+	}
+
 	// Check if this token owned by provided user.
-	if token.GUID != provided.GUID {
+	if token.GUID != guid {
 		return nil, e.ErrInvalidToken
 	}
 
