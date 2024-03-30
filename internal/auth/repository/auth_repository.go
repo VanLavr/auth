@@ -2,10 +2,12 @@ package repository
 
 import (
 	"context"
+	"log"
 
 	"github.com/VanLavr/auth/internal/auth/usecase"
 	"github.com/VanLavr/auth/internal/models"
 	"github.com/VanLavr/auth/internal/pkg/config"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -21,16 +23,14 @@ func New(conn string) usecase.Repository {
 	return &authRepository{conn: conn}
 }
 
-func (a *authRepository) StoreToken(token models.RefreshToken)
-
-func (a *authRepository) Connect(cfg *config.Config) error {
+func (a *authRepository) Connect(ctx context.Context, cfg *config.Config) error {
 	clientOptions := options.Client().ApplyURI(a.conn)
-	client, err := mongo.Connect(context.Background(), clientOptions)
+	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
 		return err
 	}
 
-	if err = client.Ping(context.Background(), nil); err != nil {
+	if err = client.Ping(ctx, nil); err != nil {
 		return err
 	}
 
@@ -41,13 +41,32 @@ func (a *authRepository) Connect(cfg *config.Config) error {
 	return nil
 }
 
-func (a *authRepository) CloseConnetion() error {
-	if err := a.client.Disconnect(context.Background()); err != nil {
+func (a *authRepository) CloseConnetion(ctx context.Context) error {
+	if err := a.client.Disconnect(ctx); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (a *authRepository) SetCollection()
+func (a *authRepository) GetToken(ctx context.Context, provided models.RefreshToken) (*models.RefreshToken, error) {
+	cursor, err := a.collection.Find(ctx, bson.D{
+		{"Token_String", provided.TokenString},
+		{"GUID", provided.GUID},
+	})
 
-func (a *authRepository) GetToken(string) *models.RefreshToken
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	var result models.RefreshToken
+	for cursor.Next(ctx) {
+		if err := cursor.Decode(&result); err != nil {
+			return nil, err
+		}
+	}
+
+	return &result, nil
+}
+
+func (a *authRepository) StoreToken(ctx context.Context, token models.RefreshToken) error

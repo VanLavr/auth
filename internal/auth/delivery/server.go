@@ -17,12 +17,12 @@ type Server struct {
 	httpSrv *http.Server
 	httpMux *http.ServeMux
 	jwt     *jwt.JwtMiddleware
-	Usecase
+	u       Usecase
 }
 
 // Busyness logic for refreshing tokens e.g.
 type Usecase interface {
-	RefreshTokenPair(models.RefreshToken) (map[string]string, error)
+	RefreshTokenPair(context.Context, models.RefreshToken) (map[string]string, error)
 }
 
 func New(cfg *config.Config, u Usecase) *Server {
@@ -34,7 +34,7 @@ func New(cfg *config.Config, u Usecase) *Server {
 			MaxHeaderBytes: cfg.MaxHeaderBytes,
 		},
 		httpMux: http.NewServeMux(),
-		Usecase: u,
+		u:       u,
 		jwt:     jwt.New(cfg),
 	}
 
@@ -70,7 +70,7 @@ func (s *Server) refreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := s.RefreshTokenPair(token)
+	data, err := s.u.RefreshTokenPair(r.Context(), token)
 	if err != nil {
 		fmt.Fprint(w, s.encodeToJSON(Response{
 			Error:   err.Error(),

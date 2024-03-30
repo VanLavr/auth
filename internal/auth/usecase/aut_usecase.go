@@ -1,6 +1,8 @@
 package usecase
 
 import (
+	"context"
+
 	"github.com/VanLavr/auth/internal/auth/delivery"
 	"github.com/VanLavr/auth/internal/models"
 	"github.com/VanLavr/auth/internal/pkg/config"
@@ -12,12 +14,13 @@ type authUsecase struct {
 
 // Repository for working with MongoDB
 type Repository interface {
-	Connect(*config.Config) error
-	CloseConnetion() error
+	Connect(context.Context, *config.Config) error
+	CloseConnetion(context.Context) error
 
-	StoreToken(models.RefreshToken)
-	GetToken(string) *models.RefreshToken
-	SetCollection() // worth it???
+	// StoreToken() Saves new refresh token and marks it as unused.
+	StoreToken(context.Context, models.RefreshToken) error
+	// GetToken() requires provided token for getting the token from mongo and check if it was used.
+	GetToken(context.Context, models.RefreshToken) (*models.RefreshToken, error)
 }
 
 func New(r Repository) delivery.Usecase {
@@ -30,7 +33,7 @@ func New(r Repository) delivery.Usecase {
 // Generate new token pair.
 // Save new refresh token and mark it as unused.
 // Return the pair.
-func (a *authUsecase) RefreshTokenPair(token models.RefreshToken) (map[string]string, error) {
+func (a *authUsecase) RefreshTokenPair(ctx context.Context, token models.RefreshToken) (map[string]string, error) {
 	panic("not implemented")
 }
 
