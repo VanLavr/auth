@@ -26,7 +26,7 @@ type Repository interface {
 	// GetToken() requires provided token for getting the token from mongo and check if it was used.
 	GetToken(context.Context, models.RefreshToken) (*models.RefreshToken, error)
 	// UpdateToken() is used to mark tokens as used
-	UpdateToken(models.RefreshToken) error
+	UpdateToken(context.Context, models.RefreshToken) error
 }
 
 func New(r Repository, cfg *config.Config) delivery.Usecase {
@@ -63,7 +63,7 @@ func (a *authUsecase) RefreshTokenPair(ctx context.Context, provided models.Refr
 	}
 
 	// Update token in mongo -> it will replace used tokenstring with new tokenstring.
-	if err := a.repository.UpdateToken(refresh); err != nil {
+	if err := a.repository.UpdateToken(ctx, refresh); err != nil {
 		return nil, err
 	}
 

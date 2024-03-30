@@ -49,15 +49,18 @@ func (a *authRepository) CloseConnetion(ctx context.Context) error {
 	return nil
 }
 
+// Create a filter.
 // Find a token via tokenstring and guid.
 // Bind it to an object and check if it's fields empty or not.
 func (a *authRepository) GetToken(ctx context.Context, provided models.RefreshToken) (*models.RefreshToken, error) {
-	// Find a token via tokenstring and guid.
-	cursor, err := a.collection.Find(ctx, bson.D{
+	// Create a filter.
+	filter := bson.D{
 		{"Token_String", provided.TokenString},
 		{"GUID", provided.GUID},
-	})
+	}
 
+	// Find a token via tokenstring and guid.
+	cursor, err := a.collection.Find(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -88,6 +91,31 @@ func (a *authRepository) StoreToken(ctx context.Context, token models.RefreshTok
 	return nil
 }
 
-func (a *authRepository) UpdateToken(models.RefreshToken) error {
-	panic("not implemented")
+// Create a filter.
+// Create an updated document.
+// Update a document that matches the filter.
+func (a *authRepository) UpdateToken(ctx context.Context, provided models.RefreshToken) error {
+	// Create a filter.
+	filter := bson.D{
+		{"GUID", provided.GUID},
+	}
+
+	// Create an updated document.
+	update := bson.D{
+		{"Token_String", provided.TokenString},
+		{"GUID", provided.GUID},
+	}
+
+	// Update a document that matches the filter.
+	result, err := a.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
+	if result.MatchedCount != 1 {
+		log.Println("no matches")
+		return e.ErrInternal
+	}
+
+	return nil
 }
