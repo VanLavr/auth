@@ -62,9 +62,8 @@ func (a *authRepository) CloseConnetion(ctx context.Context) error {
 // Bind it to an object and check if it's fields empty or not.
 func (a *authRepository) GetToken(ctx context.Context, provided models.RefreshToken) (*models.RefreshToken, error) {
 	// Create a filter.
-	filter := bson.D{
-		{"Token_String", provided.TokenString},
-		{"GUID", provided.GUID},
+	filter := bson.M{
+		"guid": provided.GUID,
 	}
 
 	// Find a token via tokenstring and guid.
@@ -106,14 +105,16 @@ func (a *authRepository) StoreToken(ctx context.Context, token models.RefreshTok
 // Update a document that matches the filter.
 func (a *authRepository) UpdateToken(ctx context.Context, provided models.RefreshToken) error {
 	// Create a filter.
-	filter := bson.D{
-		{"GUID", provided.GUID},
+	filter := bson.M{
+		"guid": provided.GUID,
 	}
 
 	// Create an updated document.
-	update := bson.D{
-		{"Token_String", provided.TokenString},
-		{"GUID", provided.GUID},
+	update := bson.M{
+		"$set": bson.M{
+			"tokenstring": provided.TokenString,
+			"guid":        provided.GUID,
+		},
 	}
 
 	// Update a document that matches the filter.

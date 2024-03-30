@@ -98,7 +98,9 @@ func (a *authUsecase) RefreshTokenPair(ctx context.Context, provided models.Refr
 
 // Validate GUID.
 // Generate new token pair.
-// Save refresh token in mongo.
+// Check if there is old refresh token
+// Save refresh token in mongo if there was no old token.
+// Update refresh token if there was an old token.
 // Return token pair.
 func (a *authUsecase) GetNewTokenPair(ctx context.Context, id string) (map[string]any, error) {
 	// Validate GUID.
@@ -114,17 +116,41 @@ func (a *authUsecase) GetNewTokenPair(ctx context.Context, id string) (map[strin
 		TokenString: tokens["refresh_token"],
 	}
 
-	// Save refresh token in mongo.
-	if err := a.repository.StoreToken(ctx, refresh); err != nil {
+	// Check if there is old refresh token
+	token, err := a.repository.GetToken(ctx, models.RefreshToken{GUID: id})
+	if err != nil && err != e.ErrTokenNotFound {
 		slog.Error(err.Error())
 		return nil, err
 	}
 
-	// Return token pair.
-	return map[string]any{
-		"access_token":  tokens["access_token"],
-		"refresh_token": refresh,
-	}, nil
+	// Save refresh token in mongo if there was no old token.
+	if token == nil {
+		// Save refresh token in mongo.
+		if err := a.repository.StoreToken(ctx, refresh); err != nil {
+			slog.Error(err.Error())
+			return nil, err
+		}
+
+		// Return token pair.
+		return map[string]any{
+			"access_token":  tokens["access_token"],
+			"refresh_token": refresh,
+		}, nil
+
+		// Update refresh token if there was an old token.
+	} else {
+		// Update token in mongo -> it will replace used tokenstring with new tokenstring.
+		if err := a.repository.UpdateToken(ctx, refresh); err != nil {
+			slog.Error(err.Error())
+			return nil, err
+		}
+
+		// Return the pair.
+		return map[string]any{
+			"access_token":  tokens["access_token"],
+			"refresh_token": refresh,
+		}, nil
+	}
 }
 
 func (a *authUsecase) validateID(id string) bool {
