@@ -36,6 +36,7 @@ func (j *JwtMiddleware) ValidateAccessToken(next func(w http.ResponseWriter, r *
 		// Extract token string from request.
 		tokenString, err := j.ExtractTokenString(r)
 		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
 			fmt.Fprint(w, err.Error())
 			slog.Error(err.Error())
 			return
@@ -52,6 +53,7 @@ func (j *JwtMiddleware) ValidateAccessToken(next func(w http.ResponseWriter, r *
 
 		// Check if it valid or not.
 		if err != nil || !token.Valid {
+			w.WriteHeader(http.StatusUnauthorized)
 			fmt.Fprint(w, e.ErrInvalidToken.Error())
 			slog.Error(err.Error())
 			return

@@ -70,6 +70,7 @@ func (s *Server) refreshToken(w http.ResponseWriter, r *http.Request) {
 	access, err := s.jwt.ExtractTokenString(r)
 	if err != nil {
 		slog.Error(err.Error())
+		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprint(w, s.encodeToJSON(Response{
 			Error:   err.Error(),
 			Content: nil,
@@ -81,6 +82,7 @@ func (s *Server) refreshToken(w http.ResponseWriter, r *http.Request) {
 	data, err := s.u.RefreshTokenPair(r.Context(), token, access)
 	if err != nil {
 		slog.Error(err.Error())
+		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprint(w, s.encodeToJSON(Response{
 			Error:   err.Error(),
 			Content: nil,
@@ -104,6 +106,7 @@ func (s *Server) getTokenPair(w http.ResponseWriter, r *http.Request) {
 	tokens, err := s.u.GetNewTokenPair(r.Context(), r.PathValue("id"))
 	if err != nil {
 		slog.Error(err.Error())
+		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprint(w, s.encodeToJSON(Response{
 			Error:   err.Error(),
 			Content: nil,
