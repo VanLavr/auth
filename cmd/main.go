@@ -15,7 +15,7 @@ import (
 )
 
 func main() {
-	ctx, close := signal.NotifyContext(context.Background(), os.Interrupt)
+	ctx, close := signal.NotifyContext(context.TODO(), os.Interrupt)
 	defer close()
 
 	cfg := config.New()
@@ -40,7 +40,7 @@ func main() {
 
 	<-ctx.Done()
 
-	if err := srv.ShutDown(ctx); err != nil {
+	if err := srv.ShutDown(context.TODO()); err != nil {
 		slog.Error(err.Error())
 		os.Exit(1)
 	}
