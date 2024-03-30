@@ -10,4 +10,6 @@ type Config struct {
 	Secret         string
 	AccessExpTime  time.Duration
 	RefreshExpTime time.Duration
+	DBName         string
+	CollectionName string
 }
