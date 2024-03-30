@@ -78,3 +78,7 @@ func (a *authRepository) StoreToken(ctx context.Context, token models.RefreshTok
 
 	return nil
 }
+
+func (a *authRepository) MarkToken(models.RefreshToken) error {
+	panic("not implemented")
+}
