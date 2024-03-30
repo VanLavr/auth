@@ -69,4 +69,12 @@ func (a *authRepository) GetToken(ctx context.Context, provided models.RefreshTo
 	return &result, nil
 }
 
-func (a *authRepository) StoreToken(ctx context.Context, token models.RefreshToken) error
+func (a *authRepository) StoreToken(ctx context.Context, token models.RefreshToken) error {
+	_, err := a.collection.InsertOne(ctx, token)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	return nil
+}
