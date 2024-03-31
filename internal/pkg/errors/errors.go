@@ -11,4 +11,5 @@ var (
 	ErrTokenAlreadyUsed     = errors.New("provided token have already been used")
 	ErrInvalidGUID          = errors.New("provided GUID is invalid")
 	ErrTokenNotFound        = errors.New("provided token does not exists")
+	ErrBadRequest           = errors.New("provided request data is not valid")
 )
