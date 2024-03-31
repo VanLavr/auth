@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  authservice:
+    image: lavrushkoivan/auth
+    ports:
+      - 8080:8080
+
+  tokens_db:
+    image: mongodb/mongodb-community-server
+    ports:
+      - 27017:27017
+    volumes:
+      - authVol:/data/db
+
+volumes:
+  authVol:
