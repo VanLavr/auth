@@ -1,4 +1,4 @@
-# **Тестовое задание на позицию Junior Backend Developer**
+# **Auth app**
 ## - Access token type - **JWT**
 ## - Refresh token type - **JWT**
 Refresh token stored in databse as **SHA512** hash (as jwt encryption algorythm) with GUID (to relate token to certain user)
