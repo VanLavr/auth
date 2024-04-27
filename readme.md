@@ -6,7 +6,7 @@ Refresh token stored in databse as **SHA512** hash (as jwt encryption algorythm)
 Tokens are related to each other via creation time
 
 ---
-# How to run this amazing repo:
+## How to run this amazing repo:
 1) read example of .env file
-2) write your own .env file
+2) write your own .env file (check out the docker-compose file and expose proper ports)
 3) run: ```make```
