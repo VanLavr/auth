@@ -12,4 +12,5 @@ var (
 	ErrInvalidGUID          = errors.New("provided GUID is invalid")
 	ErrTokenNotFound        = errors.New("provided token does not exists")
 	ErrBadRequest           = errors.New("provided request data is not valid")
+	ErrUserNotFound         = errors.New("provided GUID to update was not found")
 )

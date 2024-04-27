@@ -134,7 +134,7 @@ func (a *authRepository) UpdateToken(ctx context.Context, provided models.Refres
 
 	if result.MatchedCount != 1 {
 		slog.Error("no matches")
-		return e.ErrInternal
+		return e.ErrUserNotFound
 	}
 
 	return nil
