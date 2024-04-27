@@ -165,7 +165,7 @@ func (s *Server) getTokenPair(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("HERE", tokens["refresh_token"].(models.RefreshToken).TokenString)
+	slog.Debug(fmt.Sprintf("HERE %v", tokens["refresh_token"].(models.RefreshToken).TokenString))
 	newRefreshToken.TokenString = base64.StdEncoding.EncodeToString([]byte(newRefreshToken.TokenString))
 	tokens["refresh_token"] = newRefreshToken
 

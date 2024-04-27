@@ -1,31 +1,31 @@
 package hasher
 
 import (
-	"log"
-
-	"golang.org/x/crypto/bcrypt"
+	"crypto/sha512"
+	"hash"
 )
 
 type Hasher struct {
-	salt int
+	hasher hash.Hash
 }
 
-var Hshr = NewHasher(4)
+var Hshr = NewHasher()
 
-func NewHasher(salt int) *Hasher {
-	return &Hasher{salt: salt}
+func NewHasher() *Hasher {
+	return &Hasher{hasher: sha512.New()}
 }
 
-func (h *Hasher) Hash(data string) string {
-	hash, err := bcrypt.GenerateFromPassword([]byte(data), h.salt)
-	if err != nil {
-		log.Fatal(err)
-	}
+func (h *Hasher) Encrypt(data string) string {
+	defer h.hasher.Reset()
+	h.hasher.Write([]byte(data))
 
-	return string(hash)
+	return string(h.hasher.Sum(nil))
 }
 
 func (h *Hasher) Validate(origin string, data string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(origin), []byte(data))
-	return err == nil
+	defer h.hasher.Reset()
+
+	h.hasher.Write([]byte(data))
+
+	return string(h.hasher.Sum(nil)) == origin
 }

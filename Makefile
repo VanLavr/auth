@@ -1,5 +1,9 @@
 run:
-	@go run cmd/main.go
+	@docker-compose up --build -d
 
-gen_mocks:
-	@mockery --dir=./internal/auth/service --name=Repository
+logs:
+	@docker logs auth-authservice-1
+
+stoprm:
+	@docker stop auth-authservice-1 auth-tokens_db-1
+	@docker rm auth-authservice-1 auth-tokens_db-1

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -19,7 +18,6 @@ func main() {
 	defer close()
 
 	cfg := config.New()
-	log.Println(cfg)
 	logger := logging.New()
 	logger.SetAsDefault()
 

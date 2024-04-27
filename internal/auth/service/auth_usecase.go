@@ -98,7 +98,7 @@ func (a *authUsecase) RefreshTokenPair(ctx context.Context, provided models.Refr
 	}
 
 	// Hash refresh token.
-	hash := hasher.Hshr.Hash(refresh.TokenString)
+	hash := hasher.Hshr.Encrypt(refresh.TokenString)
 	toStoreToken := models.RefreshToken{
 		GUID:        provided.GUID,
 		TokenString: hash,
@@ -146,7 +146,7 @@ func (a *authUsecase) GetNewTokenPair(ctx context.Context, id string) (map[strin
 	}
 
 	// Hash refresh token
-	hash := hasher.Hshr.Hash(refresh.TokenString)
+	hash := hasher.Hshr.Encrypt(refresh.TokenString)
 	toStoreToken := models.RefreshToken{
 		GUID:        refresh.GUID,
 		TokenString: hash,

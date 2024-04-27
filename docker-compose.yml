@@ -1,8 +1,8 @@
-version: "3.8"
+version: "3"
 
 services:
   authservice:
-    image: lavrushkoivan/auth
+    build: .
     ports:
       - 8080:8080
 
