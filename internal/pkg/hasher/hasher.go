@@ -2,6 +2,7 @@ package hasher
 
 import (
 	"crypto/sha512"
+	"encoding/hex"
 	"hash"
 )
 
@@ -19,7 +20,7 @@ func (h *Hasher) Encrypt(data string) string {
 	defer h.hasher.Reset()
 	h.hasher.Write([]byte(data))
 
-	return string(h.hasher.Sum(nil))
+	return hex.EncodeToString(h.hasher.Sum(nil))
 }
 
 func (h *Hasher) Validate(origin string, data string) bool {
@@ -27,5 +28,5 @@ func (h *Hasher) Validate(origin string, data string) bool {
 
 	h.hasher.Write([]byte(data))
 
-	return string(h.hasher.Sum(nil)) == origin
+	return hex.EncodeToString(h.hasher.Sum(nil)) == origin
 }

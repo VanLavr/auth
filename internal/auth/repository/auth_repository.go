@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
 	usecase "github.com/VanLavr/auth/internal/auth/service"
@@ -122,6 +123,7 @@ func (a *authRepository) UpdateToken(ctx context.Context, provided models.Refres
 			"guid":        provided.GUID,
 		},
 	}
+	slog.Debug(fmt.Sprintf("%v\n", update))
 
 	// Update a document that matches the filter.
 	result, err := a.collection.UpdateOne(ctx, filter, update)
