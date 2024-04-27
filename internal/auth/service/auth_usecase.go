@@ -34,6 +34,7 @@ type Repository interface {
 }
 
 func New(r Repository, cfg *config.Config) delivery.Usecase {
+	slog.Debug("new service called")
 	tokenManager := newTokenManager(cfg)
 	return &authUsecase{repository: r, tokenManager: tokenManager}
 }
@@ -48,6 +49,7 @@ func New(r Repository, cfg *config.Config) delivery.Usecase {
 // Update token in mongo -> it will replace used tokenstring with new tokenstring.
 // Return the pair.
 func (a *authUsecase) RefreshTokenPair(ctx context.Context, provided models.RefreshToken, access string) (map[string]any, error) {
+	slog.Debug("refreshtokenpair service called")
 	token, err := a.repository.GetToken(ctx, provided)
 	if err != nil {
 		slog.Error(err.Error())
@@ -79,7 +81,7 @@ func (a *authUsecase) RefreshTokenPair(ctx context.Context, provided models.Refr
 	// to inspect if provided token was updated or not. This comparison allow us to check if we can use provided token for refreshing
 	// or not even if token was not expired, but was updated (used). So if it not expired, but updated
 	// it is an already used token, so we can not use it anymore.
-	if token.GUID != guid || token.TokenString != provided.TokenString {
+	if token.GUID != guid || !hasher.Hshr.Validate(token.TokenString, provided.TokenString) {
 		slog.Error(e.ErrInvalidToken.Error())
 		return nil, e.ErrInvalidToken
 	}
@@ -125,6 +127,7 @@ func (a *authUsecase) RefreshTokenPair(ctx context.Context, provided models.Refr
 // Update hash of refresh token if there was an old token.
 // Return token pair.
 func (a *authUsecase) GetNewTokenPair(ctx context.Context, id string) (map[string]any, error) {
+	slog.Debug("getnewtokenpair service called")
 	// Validate GUID.
 	if !a.validateID(id) {
 		slog.Error(e.ErrInvalidGUID.Error())
@@ -183,5 +186,6 @@ func (a *authUsecase) GetNewTokenPair(ctx context.Context, id string) (map[strin
 }
 
 func (a *authUsecase) validateID(id string) bool {
+	slog.Debug("validateid service called")
 	return guid.IsGuid(id)
 }

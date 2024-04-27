@@ -34,6 +34,7 @@ type Usecase interface {
 }
 
 func New(u Usecase, cfg *config.Config) *Server {
+	slog.Debug("new server called")
 	srv := &Server{
 		httpSrv: &http.Server{
 			Addr:           cfg.Addr,
@@ -51,10 +52,12 @@ func New(u Usecase, cfg *config.Config) *Server {
 }
 
 func (s *Server) Run() error {
+	slog.Debug("run server called")
 	return s.httpSrv.ListenAndServe()
 }
 
 func (s *Server) ShutDown(ctx context.Context) error {
+	slog.Debug("shutdown server called")
 	return s.httpSrv.Shutdown(ctx)
 }
 
@@ -177,6 +180,7 @@ func (s *Server) getTokenPair(w http.ResponseWriter, r *http.Request) {
 
 // Access token testing endpoint.
 func (s *Server) restricted(w http.ResponseWriter, r *http.Request) {
+	slog.Debug("restricted server called")
 	fmt.Fprint(w, s.encodeToJSON(Response{
 		Error:   "",
 		Content: "got",
@@ -184,6 +188,7 @@ func (s *Server) restricted(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) encodeToJSON(resp Response) string {
+	slog.Debug("encodetojson server called")
 	encoded, err := json.Marshal(resp)
 	if err != nil {
 		slog.Error(err.Error())
@@ -193,12 +198,14 @@ func (s *Server) encodeToJSON(resp Response) string {
 }
 
 func (s *Server) decodeBody(r *http.Request, dest *models.RefreshToken) {
+	slog.Debug("decodebody server called")
 	if err := json.NewDecoder(r.Body).Decode(dest); err != nil {
 		slog.Error(err.Error())
 	}
 }
 
 func (s *Server) stripZeros(token []byte) []byte {
+	slog.Debug("stripzeros server called")
 	result := []byte{}
 	for _, b := range token {
 		if b != 0 {

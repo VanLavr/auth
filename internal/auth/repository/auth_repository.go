@@ -21,11 +21,13 @@ type authRepository struct {
 }
 
 func New(cfg *config.Config) usecase.Repository {
+	slog.Debug("new repo called")
 	return &authRepository{conn: cfg.Mongo}
 }
 
 // Connet() connects to mongo and selects the database and the collection.
 func (a *authRepository) Connect(ctx context.Context, cfg *config.Config) error {
+	slog.Debug("connect repo called")
 	// Create client options.
 	clientOptions := options.Client().ApplyURI(a.conn)
 	// Connect.
@@ -50,6 +52,7 @@ func (a *authRepository) Connect(ctx context.Context, cfg *config.Config) error 
 }
 
 func (a *authRepository) CloseConnetion(ctx context.Context) error {
+	slog.Debug("closeconnection repo called")
 	if err := a.client.Disconnect(ctx); err != nil {
 		slog.Error(err.Error())
 		return err
@@ -61,6 +64,7 @@ func (a *authRepository) CloseConnetion(ctx context.Context) error {
 // Find a token via tokenstring and guid.
 // Bind it to an object and check if it's fields empty or not.
 func (a *authRepository) GetToken(ctx context.Context, provided models.RefreshToken) (*models.RefreshToken, error) {
+	slog.Debug("gettoken repo called")
 	// Create a filter.
 	filter := bson.M{
 		"guid": provided.GUID,
@@ -91,6 +95,7 @@ func (a *authRepository) GetToken(ctx context.Context, provided models.RefreshTo
 
 // Store generated refresh token.
 func (a *authRepository) StoreToken(ctx context.Context, token models.RefreshToken) error {
+	slog.Debug("storetoken repo called")
 	_, err := a.collection.InsertOne(ctx, token)
 	if err != nil {
 		slog.Error(err.Error())
@@ -104,6 +109,7 @@ func (a *authRepository) StoreToken(ctx context.Context, token models.RefreshTok
 // Create an updated document.
 // Update a document that matches the filter.
 func (a *authRepository) UpdateToken(ctx context.Context, provided models.RefreshToken) error {
+	slog.Debug("updatetoken repo called")
 	// Create a filter.
 	filter := bson.M{
 		"guid": provided.GUID,
