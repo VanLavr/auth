@@ -10,6 +10,7 @@ import (
 	"github.com/VanLavr/auth/internal/models"
 	"github.com/VanLavr/auth/internal/pkg/config"
 	e "github.com/VanLavr/auth/internal/pkg/errors"
+	"github.com/VanLavr/auth/internal/pkg/hasher"
 
 	"github.com/beevik/guid"
 )
@@ -38,10 +39,12 @@ func New(r Repository, cfg *config.Config) delivery.Usecase {
 }
 
 // Check if provided token exists.
+// Compare provided token with stored hash.
 // Validate refresh token jwt.
 // Check if this token owned by provided user.
 // Validate access and refresh token coherence.
 // Generate new token pair.
+// Hash refresh token.
 // Update token in mongo -> it will replace used tokenstring with new tokenstring.
 // Return the pair.
 func (a *authUsecase) RefreshTokenPair(ctx context.Context, provided models.RefreshToken, access string) (map[string]any, error) {
@@ -57,6 +60,12 @@ func (a *authUsecase) RefreshTokenPair(ctx context.Context, provided models.Refr
 		return nil, e.ErrInvalidToken
 	}
 
+	// Compare provided token with stored hash.
+	if !hasher.Hshr.Validate(token.TokenString, provided.TokenString) {
+		slog.Error(e.ErrInvalidToken.Error())
+		return nil, e.ErrInvalidToken
+	}
+
 	// Validate refresh token jwt. (expired or not)
 	guid, valid := a.tokenManager.ValidateRefreshToken(provided.TokenString)
 	if !valid {
@@ -65,10 +74,11 @@ func (a *authUsecase) RefreshTokenPair(ctx context.Context, provided models.Refr
 	}
 
 	// Check if this token owned by provided user.
-	// tokenString comparison here stands for comparing provided tokenstring and tokenstring from database
+	// Check if provided refresh token was already used.
+	// TokenString comparison here stands for comparing provided tokenstring and tokenstring from database
 	// to inspect if provided token was updated or not. This comparison allow us to check if we can use provided token for refreshing
 	// or not even if token was not expired, but was updated (used). So if it not expired, but updated
-	// it is an already used tokne, so we can not use it anymore.
+	// it is an already used token, so we can not use it anymore.
 	if token.GUID != guid || token.TokenString != provided.TokenString {
 		slog.Error(e.ErrInvalidToken.Error())
 		return nil, e.ErrInvalidToken
@@ -87,8 +97,15 @@ func (a *authUsecase) RefreshTokenPair(ctx context.Context, provided models.Refr
 		TokenString: tokens["refresh_token"],
 	}
 
+	// Hash refresh token.
+	hash := hasher.Hshr.Hash(refresh.TokenString)
+	toStoreToken := models.RefreshToken{
+		GUID:        provided.GUID,
+		TokenString: hash,
+	}
+
 	// Update token in mongo -> it will replace used tokenstring with new tokenstring.
-	if err := a.repository.UpdateToken(ctx, refresh); err != nil {
+	if err := a.repository.UpdateToken(ctx, toStoreToken); err != nil {
 		slog.Error(err.Error())
 		return nil, err
 	}
@@ -103,8 +120,9 @@ func (a *authUsecase) RefreshTokenPair(ctx context.Context, provided models.Refr
 // Validate GUID.
 // Generate new token pair.
 // Check if there is old refresh token
-// Save refresh token in mongo if there was no old token.
-// Update refresh token if there was an old token.
+// Hash refresh token
+// Save hash of refresh token in mongo if there was no old token.
+// Update hash of refresh token if there was an old token.
 // Return token pair.
 func (a *authUsecase) GetNewTokenPair(ctx context.Context, id string) (map[string]any, error) {
 	// Validate GUID.
@@ -127,10 +145,17 @@ func (a *authUsecase) GetNewTokenPair(ctx context.Context, id string) (map[strin
 		return nil, err
 	}
 
+	// Hash refresh token
+	hash := hasher.Hshr.Hash(refresh.TokenString)
+	toStoreToken := models.RefreshToken{
+		GUID:        refresh.GUID,
+		TokenString: hash,
+	}
+
 	// Save refresh token in mongo if there was no old token.
 	if token == nil {
 		// Save refresh token in mongo.
-		if err := a.repository.StoreToken(ctx, refresh); err != nil {
+		if err := a.repository.StoreToken(ctx, toStoreToken); err != nil {
 			slog.Error(err.Error())
 			return nil, err
 		}
@@ -144,7 +169,7 @@ func (a *authUsecase) GetNewTokenPair(ctx context.Context, id string) (map[strin
 		// Update refresh token if there was an old token.
 	} else {
 		// Update token in mongo -> it will replace used tokenstring with new tokenstring.
-		if err := a.repository.UpdateToken(ctx, refresh); err != nil {
+		if err := a.repository.UpdateToken(ctx, toStoreToken); err != nil {
 			slog.Error(err.Error())
 			return nil, err
 		}
