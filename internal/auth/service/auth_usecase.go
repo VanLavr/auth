@@ -42,7 +42,7 @@ func New(r Repository, cfg *config.Config) delivery.Usecase {
 // Check if provided token exists.
 // Compare provided token with stored hash.
 // Validate refresh token jwt.
-// Check if this token owned by provided user.
+// Check if this token owned by provided user and check if this token was already used (refresh tokenstrings are not the same).
 // Validate access and refresh token coherence.
 // Generate new token pair.
 // Hash refresh token.
@@ -58,20 +58,20 @@ func (a *authUsecase) RefreshTokenPair(ctx context.Context, provided models.Refr
 
 	// Check if provided token exists.
 	if token == nil {
-		slog.Error(e.ErrInvalidToken.Error())
+		slog.Error("tonken not found")
 		return nil, e.ErrInvalidToken
 	}
 
 	// Compare provided token with stored hash.
 	if !hasher.Hshr.Validate(token.TokenString, provided.TokenString) {
-		slog.Error(e.ErrInvalidToken.Error())
+		slog.Error("token hash malformed")
 		return nil, e.ErrInvalidToken
 	}
 
 	// Validate refresh token jwt. (expired or not)
 	guid, valid := a.tokenManager.ValidateRefreshToken(provided.TokenString)
 	if !valid {
-		slog.Error(e.ErrInvalidToken.Error())
+		slog.Error("token jwt malformed")
 		return nil, e.ErrInvalidToken
 	}
 
@@ -82,13 +82,13 @@ func (a *authUsecase) RefreshTokenPair(ctx context.Context, provided models.Refr
 	// or not even if token was not expired, but was updated (used). So if it not expired, but updated
 	// it is an already used token, so we can not use it anymore.
 	if token.GUID != guid || !hasher.Hshr.Validate(token.TokenString, provided.TokenString) {
-		slog.Error(e.ErrInvalidToken.Error())
+		slog.Error("token is used")
 		return nil, e.ErrInvalidToken
 	}
 
 	// Validate access and refresh token coherence.
 	if !a.tokenManager.ValidateTokensCoherence(access, provided.TokenString) {
-		slog.Error(e.ErrInvalidToken.Error())
+		slog.Error("tokens coherence malformed")
 		return nil, e.ErrInvalidToken
 	}
 
