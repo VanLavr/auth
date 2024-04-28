@@ -12,5 +12,7 @@ Tokens are related to each other via creation time
 1.2) also be careful and dont forget to provide mongo url same as it is provided in docker-compose service name
 2) write your own .env file (check out the docker-compose file and expose proper ports)
 3) run: ```make``` or ```sudo make``` if ur docker daemon has no permissions
+
+P.S run ```make stoprm``` or ```sudo make stoprm``` for killing containers|
 ---
 **API documentation is available on /swagger/index.html**
