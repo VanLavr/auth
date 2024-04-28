@@ -1,0 +1,106 @@
+basePath: /restricted
+definitions:
+  delivery.Response:
+    properties:
+      content: {}
+      error:
+        type: string
+    type: object
+  models.RefreshToken:
+    properties:
+      guid:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API for authorization and access token refreshing
+  title: Demo OAuth2.0 repository
+  version: "1.2"
+paths:
+  /getToken/{id}:
+    get:
+      description: call this endpoint to generate and recieve a token pair (jwt access
+        and refresh token). It will return a new token pair in case of success (you
+        have to provide a GUID in URL path).
+      operationId: getTokenPair
+      parameters:
+      - description: GUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/delivery.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/delivery.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/delivery.Response'
+      summary: Get token pair
+  /refreshToken:
+    post:
+      consumes:
+      - application/json
+      description: call this endpoint to regenerate and recieve a token pair (jwt
+        access and refresh token). It will return a new token pair in case of success
+        (you have to provide a refreshToken in request body).
+      operationId: refreshTokenPair
+      parameters:
+      - description: refresh token object
+        in: body
+        name: refreshToken
+        required: true
+        schema:
+          $ref: '#/definitions/models.RefreshToken'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/delivery.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/delivery.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/delivery.Response'
+      summary: Refresh token pair
+  /restricted:
+    get:
+      description: 'You have to provide your jwt token to get access to this endpoint.
+        It will return the "message": "got" in case of success'
+      operationId: restricted
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/delivery.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/delivery.Response'
+      summary: Restricted endpoint (jwt token needed)
+      tags:
+      - test
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

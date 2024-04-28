@@ -13,6 +13,14 @@ import (
 	"github.com/VanLavr/auth/internal/pkg/logging"
 )
 
+// @title Demo OAuth2.0 repository
+// @version 1.2
+// @description API for authorization and access token refreshing
+// @host localhost:8080
+// @BasePath /restricted
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func main() {
 	ctx, close := signal.NotifyContext(context.TODO(), os.Interrupt)
 	defer close()

@@ -66,6 +66,17 @@ func (s *Server) ShutDown(ctx context.Context) error {
 // Extract access token from header.
 // Call usecase to refresh token pair.
 // Encode new refresh token to base64.
+// @Summary Refresh token pair
+// @Tads auth
+// @Description call this endpoint to regenerate and recieve a token pair (jwt access and refresh token). It will return a new token pair in case of success (you have to provide a refreshToken in request body).
+// @ID refreshTokenPair
+// @Accept json
+// @Produce json
+// @Param refreshToken body models.RefreshToken true "refresh token object"
+// @Success 200 {object} delivery.Response
+// @Failure 401 {object} delivery.Response
+// @Failure 500 {object} delivery.Response
+// @Router /refreshToken [post]
 func (s *Server) refreshToken(w http.ResponseWriter, r *http.Request) {
 	slog.Info("refresh token called")
 
@@ -139,6 +150,16 @@ func (s *Server) refreshToken(w http.ResponseWriter, r *http.Request) {
 // Get guid from path value.
 // Call usecase to generate pair.
 // Encode new refresh token to base64.
+// @Summary Get token pair
+// @Tads auth
+// @Description call this endpoint to generate and recieve a token pair (jwt access and refresh token). It will return a new token pair in case of success (you have to provide a GUID in URL path).
+// @ID getTokenPair
+// @Produce json
+// @Param id path string true "GUID"
+// @Success 200 {object} delivery.Response
+// @Failure 401 {object} delivery.Response
+// @Failure 500 {object} delivery.Response
+// @Router /getToken/{id} [get]
 func (s *Server) getTokenPair(w http.ResponseWriter, r *http.Request) {
 	slog.Info("get token pair is called")
 
@@ -179,6 +200,14 @@ func (s *Server) getTokenPair(w http.ResponseWriter, r *http.Request) {
 }
 
 // Access token testing endpoint.
+// @Summary Restricted endpoint (jwt token needed)
+// @Tags test
+// @Description You have to provide your jwt token to get access to this endpoint. It will return the "message": "got" in case of success
+// @ID restricted
+// @Produce json
+// @Success 200 {object} delivery.Response
+// @Failure 401 {object} delivery.Response
+// @Router /restricted [get]
 func (s *Server) restricted(w http.ResponseWriter, r *http.Request) {
 	slog.Debug("restricted server called")
 	fmt.Fprint(w, s.encodeToJSON(Response{
