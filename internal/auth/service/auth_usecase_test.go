@@ -61,6 +61,7 @@ func TestGetNewTokenPair(t *testing.T) {
 	})
 
 	for _, tc := range testcases {
+		t.Log(tc.name)
 		assert := assert.New(t)
 
 		tokens, err := service.GetNewTokenPair(context.Background(), tc.providedID)
